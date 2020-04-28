@@ -5,12 +5,12 @@ resource "random_string" "this" {
 }
 
 resource "aws_s3_bucket" "this" {
-  bucket_prefix = "oracle-lambda-layer"
+  bucket_prefix = "${var.project_name}-layer"
   acl           = "private"
 
   tags = {
-    Name        = "oracle-lambda-layer"
-    Description = "Holds the oracle-lambda-layer resources"
+    Name        = "${var.project_name}-layer"
+    Description = "Holds the ${var.project_name}-layer resources"
   }
 
   versioning {
@@ -30,35 +30,21 @@ resource "aws_s3_bucket_object" "layer_zip" {
 }
 
 resource "aws_lambda_layer_version" "lambda_layer" {
-  layer_name          = "oracle-lambda-layer"
+  layer_name          = "${var.project_name}-layer"
   s3_bucket           = aws_s3_bucket.this.bucket
   s3_key              = aws_s3_bucket_object.layer_zip.id
   compatible_runtimes = ["python3.8"]
 }
 
-data "aws_iam_policy_document" "lambda" {
-
-  statement {
-    sid = "AllowS3Write"
-    actions = [
-      "s3:Get*",
-      "s3:List*"
-    ]
-    resources = [aws_s3_bucket.this.arn]
-  }
-}
-
 module "lambda" {
   source = "github.com/claranet/terraform-aws-lambda"
 
-  function_name = "oracle-test-${random_string.this.result}"
+  function_name = "${var.project_name}-${random_string.this.result}"
   description   = "Performs oracle db operations"
   handler       = "lambda.handler"
   runtime       = "python3.8"
   timeout       = 300
 
-
-  policy      = data.aws_iam_policy_document.lambda
   source_path = "${path.module}/lambda"
 
   layers = ["${aws_lambda_layer_version.lambda_layer.arn}"]
