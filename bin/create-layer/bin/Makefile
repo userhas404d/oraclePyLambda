@@ -63,17 +63,17 @@ layer/create: docker/run
 layer/create:
 	@ echo "[$@]: Layer creation complete!"
 
-layer/publish: guard/program/jq
-layer/publish: CREATE_LAYER ?= $(shell [ ! -f $(LAYER_ARCHIVE_FULL_PATH) ] && echo "$(MAKE) layer/create")
-layer/publish:
-	@ echo "[$@]: Publishing layer"
-	$(CREATE_LAYER)
-	aws lambda publish-layer-version \
-	--layer-name $(LAYER_NAME) \
-	--description "$(LAYER_DESCRIPTION)" \
-	--zip-file fileb://$(LAYER_ARCHIVE_FULL_PATH) \
-	--compatible-runtimes $(COMPATIBLE_RUNTIMES) | jq -r '.LayerVersionArn' > $(LAYER_ARN_FILE)
-	@ echo "[$@]: Layer publishing complete"
+# layer/publish: guard/program/jq
+# layer/publish: CREATE_LAYER ?= $(shell [ ! -f $(LAYER_ARCHIVE_FULL_PATH) ] && echo "$(MAKE) layer/create")
+# layer/publish:
+# 	@ echo "[$@]: Publishing layer"
+# 	$(CREATE_LAYER)
+# 	aws lambda publish-layer-version \
+# 	--layer-name $(LAYER_NAME) \
+# 	--description "$(LAYER_DESCRIPTION)" \
+# 	--zip-file fileb://$(LAYER_ARCHIVE_FULL_PATH) \
+# 	--compatible-runtimes $(LAYER_COMPATIBLE_RUNTIMES) | jq -r '.LayerVersionArn' > $(LAYER_ARN_FILE)
+# 	@ echo "[$@]: Layer publishing complete"
 
 layer/destroy: LAYER_ARN ?= $(shell cat $(LAYER_ARN_FILE))
 layer/destroy: LAYER_BASE_ARN ?= $(shell echo $(LAYER_ARN) | sed 's/.\{2\}$$//')

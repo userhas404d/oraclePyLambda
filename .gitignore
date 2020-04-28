@@ -1,0 +1,4 @@
+.terraform
+*.zip
+.DS_Store
+layer_arn.txt

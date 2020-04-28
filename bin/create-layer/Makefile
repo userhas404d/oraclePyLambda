@@ -9,5 +9,8 @@ DOCKER_COMMAND = bash -c './bin/create-layer.sh'
 
 
 AWS_DEFAULT_REGION ?= us-east-1
+TARGET_LAMBDA_PATH ?= $(shell pwd)
+LAYER_NAME ?= "oracle-cx"
 LAYER_ARCHIVE_NAME ?= lambda_layer_payload.zip
 LAYER_ARCHIVE_FULL_PATH := $(TARGET_LAMBDA_PATH)/$(LAYER_ARCHIVE_NAME)
+LAYER_COMPATIBLE_RUNTIMES = python3.8

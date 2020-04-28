@@ -32,7 +32,9 @@ do
   pip3 install -r requirements.layer.txt -t "$layer_path" || error_exit "Encountered error installing python dependency"
   pushd lambda-package/ || error_exit "Unable to navigate to lambda-package/"
   zip -r ../lambda_layer_payload.zip python/* -x "setuptools*/*" "pkg_resources/*" "easy_install*" >/dev/null 2>&1 || error_exit "encountered error when compressing archive"
-  zip -r ../lambda_layer_payload.zip /opt/oracle/*
+  zip -r ../lambda_layer_payload.zip /opt/oracle/* -x \
+  "libclntsh.so.10.1" "libclntsh.so.11.1" "libclntsh.so.12.1" "libclntsh.so.18.1" \
+  "libocci.so.10.1" "libocci.so.11.1" "libocci.so.12.1" "libocci.so.18.1"
   popd || error_exit "Unable to return to source directory"
   rm -rf "$lambda_package"
 done
