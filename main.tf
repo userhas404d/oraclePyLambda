@@ -36,6 +36,19 @@ resource "aws_lambda_layer_version" "lambda_layer" {
   compatible_runtimes = ["python3.8"]
 }
 
+resource "aws_security_group" "lambda" {
+  name        = "${var.project_name}-ldap-query-sg-${random_string.this.result}"
+  description = "SG used by the ${var.project_name}-ldap-query-sg lambda function"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 module "lambda" {
   source = "github.com/claranet/terraform-aws-lambda"
 
@@ -47,5 +60,9 @@ module "lambda" {
 
   source_path = "${path.module}/lambda"
 
+  vpc_config = {
+    subnet_ids         = var.subnet_ids
+    security_group_ids = [aws_security_group.lambda.id]
+  }
   layers = ["${aws_lambda_layer_version.lambda_layer.arn}"]
 }
