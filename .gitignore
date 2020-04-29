@@ -4,5 +4,6 @@
 
 *.log
 *.zip
+libaio.so.*
 .DS_Store
 layer_arn.txt

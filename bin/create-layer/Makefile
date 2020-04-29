@@ -2,7 +2,7 @@
 
 DOCKER_FILE_PATH ?= $(shell pwd)/Dockerfile.layers
 DOCKER_RUN_FLAGS := --rm
-DOCKER_BINDMOUNTS := -v $(shell pwd):/layer_creation
+DOCKER_BINDMOUNTS := -v $(shell pwd):/layer_creation -v $(shell pwd)/../../lambda/lib:/lambda_lib
 DOCKER_ENV_VARS := 
 DOCKER_WORKING_DIR = /layer_creation
 DOCKER_COMMAND = bash -c './bin/create-layer.sh'

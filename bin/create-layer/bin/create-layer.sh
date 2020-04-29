@@ -19,8 +19,6 @@ echo "create-layer: running against $PROJECT_DIR"
 
 mapfile -t directories < <(find "$PROJECT_DIR" -name 'requirements.layer.txt' -exec dirname {} \; | sort -u | grep -v "\.terraform\b\|\.terragrunt-cache\b")
 
-curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basiclite-linux.x64-19.6.0.0.0dbru.zip -o oracle-instant-client.zip
-
 for dir in "${directories[@]}"
 do
   cd "${dir}" || error_exit "Unable to navigate to ${dir}"
@@ -34,3 +32,15 @@ do
   popd || error_exit "Unable to return to source directory"
   rm -rf "$lambda_package"
 done
+
+curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basiclite-linux.x64-19.6.0.0.0dbru.zip -o oracle-instant-client.zip
+# create a new oracle-instant-client zip with libaio
+unzip oracle-instant-client.zip && rm oracle-instant-client.zip
+# find /usr/lib64 -type f -name "*aio*" -exec cp {} ./instantclient_*/. \;
+mv ./instantclient_*/ lib
+zip -r lib.zip ./lib/*
+rm -rf ./lib
+
+# add libaio to the lambda/lib directory
+find /usr/lib64 -type f -name "*aio*" -exec cp {} ../lambda_lib \;
+ln ../lambda_lib/libaio.so.1.0.1 ../lambda_lib/libaio.so.1

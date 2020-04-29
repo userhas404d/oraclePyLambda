@@ -31,3 +31,9 @@ variable "env_vars" {
   default     = {}
   description = "Map of values to assing as environment vars to the lambda function"
 }
+
+variable "oracle_client_version" {
+  type        = string
+  default     = "instantclient_19_6"
+  description = "The name and version of the instant client"
+}

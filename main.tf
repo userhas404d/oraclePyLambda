@@ -20,14 +20,36 @@ resource "aws_s3_bucket" "this" {
 
 locals {
   python_layer_zip_path = "./bin/create-layer/python.zip"
-  oracle_layer_zip_path = "./bin/create-layer/oracle-instanct-client.zip"
+  oracle_layer_zip_path = "./bin/create-layer/oracle-instant-client.zip"
+  lib_layer_zip_path    = "./bin/create-layer/lib.zip"
 }
 
-resource "aws_s3_bucket_object" "oracle_layer_zip" {
+# resource "aws_s3_bucket_object" "oracle_layer_zip" {
+#   bucket = aws_s3_bucket.this.bucket
+#   key    = "oracle_lambda_layer.zip"
+#   source = local.oracle_layer_zip_path
+#   etag   = filemd5(local.oracle_layer_zip_path)
+# }
+
+# resource "aws_lambda_layer_version" "oracle_lambda_layer" {
+#   layer_name          = "${var.project_name}-cx-oracle"
+#   s3_bucket           = aws_s3_bucket.this.bucket
+#   s3_key              = aws_s3_bucket_object.oracle_layer_zip.id
+#   compatible_runtimes = ["python3.7"]
+# }
+
+resource "aws_s3_bucket_object" "lib_layer_zip" {
   bucket = aws_s3_bucket.this.bucket
-  key    = "oracle_lambda_layer.zip"
-  source = local.oracle_layer_zip_path
-  etag   = filemd5(local.oracle_layer_zip_path)
+  key    = "lib_lambda_layer.zip"
+  source = local.lib_layer_zip_path
+  etag   = filemd5(local.lib_layer_zip_path)
+}
+
+resource "aws_lambda_layer_version" "lib_lambda_layer" {
+  layer_name          = "${var.project_name}-lib"
+  s3_bucket           = aws_s3_bucket.this.bucket
+  s3_key              = aws_s3_bucket_object.lib_layer_zip.id
+  compatible_runtimes = ["python3.7"]
 }
 
 resource "aws_s3_bucket_object" "python_layer_zip" {
@@ -41,13 +63,6 @@ resource "aws_lambda_layer_version" "python_lambda_layer" {
   layer_name          = "${var.project_name}-python"
   s3_bucket           = aws_s3_bucket.this.bucket
   s3_key              = aws_s3_bucket_object.python_layer_zip.id
-  compatible_runtimes = ["python3.7"]
-}
-
-resource "aws_lambda_layer_version" "oracle_lambda_layer" {
-  layer_name          = "${var.project_name}-cx-oracle"
-  s3_bucket           = aws_s3_bucket.this.bucket
-  s3_key              = aws_s3_bucket_object.oracle_layer_zip.id
   compatible_runtimes = ["python3.7"]
 }
 
@@ -75,9 +90,7 @@ module "lambda" {
 
   source_path = "${path.module}/lambda"
   environment = {
-    variables = merge(var.env_vars, {
-      LD_LIBRARY_PATH = "/opt/oracle-instant-client/:$LD_LIBRARY_PATH"
-    })
+    variables = var.env_vars
   }
 
   vpc_config = {
@@ -86,6 +99,6 @@ module "lambda" {
   }
   layers = [
     "${aws_lambda_layer_version.python_lambda_layer.arn}",
-    "${aws_lambda_layer_version.oracle_lambda_layer.arn}"
+    "${aws_lambda_layer_version.lib_lambda_layer.arn}"
   ]
 }
