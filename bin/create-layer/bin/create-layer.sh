@@ -19,22 +19,18 @@ echo "create-layer: running against $PROJECT_DIR"
 
 mapfile -t directories < <(find "$PROJECT_DIR" -name 'requirements.layer.txt' -exec dirname {} \; | sort -u | grep -v "\.terraform\b\|\.terragrunt-cache\b")
 
-curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basiclite-linux.x64-19.6.0.0.0dbru.zip -o oracle-instanct-client.zip
-mkdir -p /opt/oracle
-unzip oracle-instanct-client.zip -d /opt/oracle
+curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basiclite-linux.x64-19.6.0.0.0dbru.zip -o oracle-instant-client.zip
 
 for dir in "${directories[@]}"
 do
   cd "${dir}" || error_exit "Unable to navigate to ${dir}"
-  lambda_package="/$(pwd)/lambda-package"
+  working_dir="$(pwd)"
+  lambda_package="$working_dir/lambda-package"
   layer_path="$lambda_package/python/lib/$PYTHON_VERSION/site-packages/"
   mkdir -p "$layer_path" || error_exit "Unable to create $layer_path"
   pip3 install -r requirements.layer.txt -t "$layer_path" || error_exit "Encountered error installing python dependency"
   pushd lambda-package/ || error_exit "Unable to navigate to lambda-package/"
-  zip -r ../lambda_layer_payload.zip python/* -x "setuptools*/*" "pkg_resources/*" "easy_install*" >/dev/null 2>&1 || error_exit "encountered error when compressing archive"
-  zip -r ../lambda_layer_payload.zip /opt/oracle/* -x \
-  "libclntsh.so.10.1" "libclntsh.so.11.1" "libclntsh.so.12.1" "libclntsh.so.18.1" \
-  "libocci.so.10.1" "libocci.so.11.1" "libocci.so.12.1" "libocci.so.18.1"
+  zip -r "$working_dir/python.zip" python/* -x "setuptools*/*" "pkg_resources/*" "easy_install*" >/dev/null 2>&1 || error_exit "encountered error when compressing archive"
   popd || error_exit "Unable to return to source directory"
   rm -rf "$lambda_package"
 done

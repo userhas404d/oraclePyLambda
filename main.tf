@@ -19,21 +19,36 @@ resource "aws_s3_bucket" "this" {
 }
 
 locals {
-  layer_zip_path = "./bin/create-layer/lambda_layer_payload.zip"
+  python_layer_zip_path = "./bin/create-layer/python.zip"
+  oracle_layer_zip_path = "./bin/create-layer/oracle-instanct-client.zip"
 }
 
-resource "aws_s3_bucket_object" "layer_zip" {
+resource "aws_s3_bucket_object" "oracle_layer_zip" {
   bucket = aws_s3_bucket.this.bucket
-  key    = "lambda_layer.zip"
-  source = local.layer_zip_path
-  etag   = filemd5(local.layer_zip_path)
+  key    = "oracle_lambda_layer.zip"
+  source = local.oracle_layer_zip_path
+  etag   = filemd5(local.oracle_layer_zip_path)
 }
 
-resource "aws_lambda_layer_version" "lambda_layer" {
-  layer_name          = "${var.project_name}-layer"
+resource "aws_s3_bucket_object" "python_layer_zip" {
+  bucket = aws_s3_bucket.this.bucket
+  key    = "python_lambda_layer.zip"
+  source = local.python_layer_zip_path
+  etag   = filemd5(local.python_layer_zip_path)
+}
+
+resource "aws_lambda_layer_version" "python_lambda_layer" {
+  layer_name          = "${var.project_name}-python"
   s3_bucket           = aws_s3_bucket.this.bucket
-  s3_key              = aws_s3_bucket_object.layer_zip.id
-  compatible_runtimes = ["python3.8"]
+  s3_key              = aws_s3_bucket_object.python_layer_zip.id
+  compatible_runtimes = ["python3.7"]
+}
+
+resource "aws_lambda_layer_version" "oracle_lambda_layer" {
+  layer_name          = "${var.project_name}-cx-oracle"
+  s3_bucket           = aws_s3_bucket.this.bucket
+  s3_key              = aws_s3_bucket_object.oracle_layer_zip.id
+  compatible_runtimes = ["python3.7"]
 }
 
 resource "aws_security_group" "lambda" {
@@ -55,14 +70,22 @@ module "lambda" {
   function_name = "${var.project_name}-${random_string.this.result}"
   description   = "Performs oracle db operations"
   handler       = "lambda.handler"
-  runtime       = "python3.8"
+  runtime       = "python3.7"
   timeout       = 300
 
   source_path = "${path.module}/lambda"
+  environment = {
+    variables = merge(var.env_vars, {
+      LD_LIBRARY_PATH = "/opt/oracle-instant-client/:$LD_LIBRARY_PATH"
+    })
+  }
 
   vpc_config = {
     subnet_ids         = var.subnet_ids
     security_group_ids = [aws_security_group.lambda.id]
   }
-  layers = ["${aws_lambda_layer_version.lambda_layer.arn}"]
+  layers = [
+    "${aws_lambda_layer_version.python_lambda_layer.arn}",
+    "${aws_lambda_layer_version.oracle_lambda_layer.arn}"
+  ]
 }

@@ -25,3 +25,9 @@ variable "subnet_ids" {
   type        = list(string)
   description = "List of target subnet ids in which to place the lambda function"
 }
+
+variable "env_vars" {
+  type        = map(string)
+  default     = {}
+  description = "Map of values to assing as environment vars to the lambda function"
+}
