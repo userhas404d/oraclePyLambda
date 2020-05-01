@@ -38,7 +38,9 @@ curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/insta
 unzip oracle-instant-client.zip && rm oracle-instant-client.zip
 # find /usr/lib64 -type f -name "*aio*" -exec cp {} ./instantclient_*/. \;
 mv ./instantclient_*/ lib
-zip -r lib.zip ./lib/*
+# only support 19.1 - the other version are just symlinks to .19.1
+# which on anything other than lambda layers is fine.. 
+zip -r lib.zip ./lib/* -x "*.10.1" "*.11.1" "*.18.1" "*.12.1"
 rm -rf ./lib
 
 # add libaio to the lambda/lib directory
