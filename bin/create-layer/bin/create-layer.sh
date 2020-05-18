@@ -36,13 +36,16 @@ done
 curl -L https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basiclite-linux.x64-19.6.0.0.0dbru.zip -o oracle-instant-client.zip
 # create a new oracle-instant-client zip with libaio
 unzip oracle-instant-client.zip && rm oracle-instant-client.zip
-# find /usr/lib64 -type f -name "*aio*" -exec cp {} ./instantclient_*/. \;
 mv ./instantclient_*/ lib
+# copy the aio libraries into the lib directory
+find /usr/lib64 -type f -name "*aio*" -exec cp {} lib \;
+# symlink version 1.0.1 to version 1
+ln lib/libaio.so.1.0.1 lib/libaio.so.1
 # only support 19.1 - the other version are just symlinks to .19.1
 # which on anything other than lambda layers is fine.. 
 zip -r lib.zip ./lib/* -x "*.10.1" "*.11.1" "*.18.1" "*.12.1"
 rm -rf ./lib
 
-# add libaio to the lambda/lib directory
-find /usr/lib64 -type f -name "*aio*" -exec cp {} ../lambda_lib \;
-ln ../lambda_lib/libaio.so.1.0.1 ../lambda_lib/libaio.so.1
+# # add libaio to the lambda/lib directory
+# find /usr/lib64 -type f -name "*aio*" -exec cp {} ../lambda_lib \;
+# ln ../lambda_lib/libaio.so.1.0.1 ../lambda_lib/libaio.so.1

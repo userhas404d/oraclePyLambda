@@ -1,1 +1,2 @@
 cx-Oracle==7.3.0
+pyyaml==5.3.1
