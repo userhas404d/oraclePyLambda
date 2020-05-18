@@ -43,7 +43,7 @@ find /usr/lib64 -type f -name "*aio*" -exec cp {} lib \;
 ln lib/libaio.so.1.0.1 lib/libaio.so.1
 # only support 19.1 - the other version are just symlinks to .19.1
 # which on anything other than lambda layers is fine.. 
-zip -r lib.zip ./lib/* -x "*.10.1" "*.11.1" "*.18.1" "*.12.1"
+zip -r oracle_client_lib.zip ./lib/* -x "*.10.1" "*.11.1" "*.18.1" "*.12.1"
 rm -rf ./lib
 
 # # add libaio to the lambda/lib directory
