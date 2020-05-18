@@ -9,10 +9,6 @@ SHELL := /usr/bin/env bash
 
 PATH := $(BIN_DIR):${PATH}
 
-# publish layer
-# cleanup layer
-# destroy layer
-
 guard/env/%:
 	@ _="$(or $($*),$(error Make/environment variable '$*' not present))"
 
@@ -30,7 +26,7 @@ zip/install:
 
 docker/%: IMAGE_NAME := $(shell basename $(PROJECT_ROOT)):latest
 
-## Builds the tardigrade-ci docker image
+## Builds the layer creation docker image
 docker/build: GET_IMAGE_ID := docker inspect --type=image -f '{{.Id}}' "$(IMAGE_NAME)" 2> /dev/null || true
 docker/build: IMAGE_ID ?= $(shell $(GET_IMAGE_ID))
 docker/build: DOCKER_BUILDKIT ?= $(shell [ -z $(TRAVIS) ] && echo "DOCKER_BUILDKIT=1" || echo "DOCKER_BUILDKIT=0";)
@@ -41,7 +37,7 @@ docker/build:
 	@echo "[$@]: Docker image build complete"
 
 # Adds the current Makefile working directory as a bind mount
-## Runs the tardigrade-ci docker image
+## Runs the layer creation docker image
 docker/run: docker/build
 	@echo "[$@]: Running docker image"
 	docker run $(DOCKER_RUN_FLAGS) $(DOCKER_BINDMOUNTS) $(DOCKER_ENV_VARS) -w $(DOCKER_WORKING_DIR) \
